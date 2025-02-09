@@ -32,18 +32,18 @@ async fn main(spawner: Spawner) {
     let mut sensor = {
         let sda = p.PIN_4 /* default I2C SDA */;
         let scl = p.PIN_5 /* default I2C SCS */;
-        let i2c = i2c::I2c::new_blocking(p.I2C0, scl, sda, {
+        let i2c = i2c::I2c::new_async(p.I2C0, scl, sda, Irqs, {
             let mut config = i2c::Config::default();
             config.frequency = 20_000;
             config
         });
 
-        scd30_interface::blocking::Scd30::new(i2c)
+        scd30_interface::asynch::Scd30::new(i2c)
     };
 
     loop {
-        while sensor.is_data_ready() != Ok(scd30_interface::data::DataStatus::Ready) {}
-        let measurement = sensor.read_measurement().unwrap();
+        while sensor.is_data_ready().await != Ok(scd30_interface::data::DataStatus::Ready) {}
+        let measurement = sensor.read_measurement().await.unwrap();
         log::info!("Measurement: {:?}", measurement);
         Timer::after_millis(1000).await;
     }

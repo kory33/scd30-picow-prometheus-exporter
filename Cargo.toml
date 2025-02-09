@@ -34,7 +34,7 @@ portable-atomic = { version = "1.10.0", features = ["critical-section"] }
 static_cell = "2.1.0"
 embassy-usb-logger = "0.4.0"
 log = "0.4.25"
-scd30-interface = "2.0.0"
+scd30-interface = { version = "2.0.0", features = ["async"] }
 
 [profile.release]
 debug = 2

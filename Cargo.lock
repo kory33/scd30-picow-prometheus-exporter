@@ -1299,6 +1299,7 @@ dependencies = [
  "byteorder",
  "duplicate",
  "embedded-hal 1.0.0",
+ "embedded-hal-async",
  "thiserror 2.0.11",
 ]
 
