@@ -6,16 +6,15 @@
 #![no_main]
 
 mod exporter_server;
+mod scd30_sensor;
 mod util;
 mod wifi_setup;
 
 use embassy_executor::Spawner;
 use embassy_net::StackResources;
-use embassy_rp::i2c::{Async, I2c};
 use embassy_rp::peripherals::*;
 use embassy_rp::{bind_interrupts, i2c, pio, usb};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -33,31 +32,6 @@ async fn logger_task(driver: usb::Driver<'static, USB>) {
     embassy_usb_logger::run!(1024, log::LevelFilter::Info, driver);
 }
 
-#[embassy_executor::task]
-async fn keep_updating_measurement(
-    mut sensor: scd30_interface::asynch::Scd30<I2c<'static, I2C0, Async>>,
-    measurement_cell: &'static embassy_sync::mutex::Mutex<
-        CriticalSectionRawMutex,
-        Option<scd30_interface::data::Measurement>,
-    >,
-) {
-    loop {
-        while sensor.is_data_ready().await != Ok(scd30_interface::data::DataStatus::Ready) {
-            Timer::after(Duration::from_millis(1000)).await;
-        }
-
-        match sensor.read_measurement().await {
-            Ok(measurement) => {
-                let mut guard = measurement_cell.lock().await;
-                *guard = Some(measurement);
-            }
-            Err(e) => {
-                log::warn!("error reading measurement: {:?}", e);
-            }
-        }
-    }
-}
-
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
@@ -65,18 +39,6 @@ async fn main(spawner: Spawner) {
     // prepare usb logger for debugging
     let driver = usb::Driver::new(p.USB, Irqs);
     spawner.spawn(logger_task(driver)).unwrap();
-
-    let sensor = {
-        let sda = p.PIN_4 /* default I2C SDA */;
-        let scl = p.PIN_5 /* default I2C SCS */;
-        let i2c = i2c::I2c::new_async(p.I2C0, scl, sda, Irqs, {
-            let mut config = i2c::Config::default();
-            config.frequency = 20_000;
-            config
-        });
-
-        scd30_interface::asynch::Scd30::new(i2c)
-    };
 
     static NETWORK_RESOURCES: StaticCell<
         StackResources<
@@ -127,6 +89,13 @@ async fn main(spawner: Spawner) {
         ))
         .unwrap();
     spawner
-        .spawn(keep_updating_measurement(sensor, measurement_cell))
+        .spawn(scd30_sensor::keep_updating_measurement(
+            scd30_sensor::setup(
+                p.I2C0,  // default I2C SCS
+                p.PIN_5, // default I2C SDA
+                p.PIN_4, Irqs,
+            ),
+            measurement_cell,
+        ))
         .unwrap();
 }
