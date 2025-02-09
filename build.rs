@@ -1,7 +1,17 @@
-/**
+//! This build script copies the `memory.x` file from the crate root into
+//! a directory where the linker can always find it at build time.
+//! For many projects this is optional, as the linker always searches the
+//! project root directory -- wherever `Cargo.toml` is. However, if you
+//! are using a workspace or have a more complicated build setup, this
+//! build script becomes required. Additionally, by requesting that
+//! Cargo re-run the build script whenever `memory.x` is changed,
+//! updating `memory.x` ensures a rebuild of the application with the
+//! new memory settings.
+
+/*
  * Copied from https://github.com/embassy-rs/embassy/blob/bcebe4c4d5b597da0b8741916e450c46e6fef06e/examples/rp/build.rs
  * License:
- * 
+ *
  * Copyright (c) Embassy project contributors
  *
  * Permission is hereby granted, free of charge, to any
@@ -13,11 +23,11 @@
  * the Software, and to permit persons to whom the Software
  * is furnished to do so, subject to the following
  * conditions:
- * 
+ *
  * The above copyright notice and this permission notice
  * shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
  * ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
  * TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -28,16 +38,6 @@
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-
-//! This build script copies the `memory.x` file from the crate root into
-//! a directory where the linker can always find it at build time.
-//! For many projects this is optional, as the linker always searches the
-//! project root directory -- wherever `Cargo.toml` is. However, if you
-//! are using a workspace or have a more complicated build setup, this
-//! build script becomes required. Additionally, by requesting that
-//! Cargo re-run the build script whenever `memory.x` is changed,
-//! updating `memory.x` ensures a rebuild of the application with the
-//! new memory settings.
 
 use std::env;
 use std::fs::File;
