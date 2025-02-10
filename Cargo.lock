@@ -1386,6 +1386,7 @@ dependencies = [
  "embassy-sync",
  "embassy-time",
  "embassy-usb-logger",
+ "embedded-hal-async",
  "embedded-io-async",
  "log",
  "panic-probe",
