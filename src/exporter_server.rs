@@ -1,3 +1,4 @@
+use core::future::Future;
 use core2::io::Cursor;
 use embassy_net::tcp::TcpSocket;
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, RawMutex};
@@ -25,6 +26,12 @@ fn write_to_initial_segment_and_reborrow<'a>(
     &mut buf[..position as usize]
 }
 
+async fn with_led_on<Fut: Future>(control: &mut cyw43::Control<'_>, f: impl FnOnce() -> Fut) {
+    control.gpio_set(0, false).await;
+    f().await;
+    control.gpio_set(0, true).await;
+}
+
 async fn serve_one_http_request(
     stack: embassy_net::Stack<'_>,
     control: &mut cyw43::Control<'_>,
@@ -38,15 +45,15 @@ async fn serve_one_http_request(
     let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
     socket.set_timeout(Some(Duration::from_secs(3)));
 
-    // TODO: what does gpio_set(0, _) do?
-    control.gpio_set(0, false).await;
-    log::info!("Listening on TCP:1234...");
-    if let Err(e) = socket.accept(1234).await {
-        log::warn!("accept error: {:?}", e);
-        return;
-    }
-    log::info!("Received connection from {:?}", socket.remote_endpoint());
-    control.gpio_set(0, true).await;
+    with_led_on(control, || async {
+        log::info!("Listening on TCP:1234...");
+        if let Err(e) = socket.accept(1234).await {
+            log::warn!("accept error: {:?}", e);
+            return;
+        }
+        log::info!("Received connection from {:?}", socket.remote_endpoint());
+    })
+    .await;
 
     let measurement = {
         let guard = measurement_cell.lock().await;
@@ -81,7 +88,7 @@ async fn serve_one_http_request(
         response_code = 503;
     }
 
-    if let Error(e) = socket.flush().await {
+    if let Err(e) = socket.flush().await {
         log::warn!(
             "exporter server: flush error on {:?}: {:?}",
             response_code,
