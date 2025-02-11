@@ -39,6 +39,7 @@ async fn serve_one_http_request(
         impl RawMutex,
         Option<scd30_interface::data::Measurement>,
     >,
+    server_began_at: embassy_time::Instant,
 ) {
     let mut rx_buffer = [0; 128];
     let mut tx_buffer = [0; 1024];
@@ -63,8 +64,11 @@ async fn serve_one_http_request(
             let mut body_buf = [0_u8; 256];
             let response_body = write_to_initial_segment_and_reborrow(&mut body_buf,
                 format_args!(
-                    "co2_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\n",
-                    measurement.co2_concentration, measurement.temperature, measurement.humidity
+                    "co2_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\nserver_uptime_millis {}\r\n",
+                    measurement.co2_concentration,
+                    measurement.temperature,
+                    measurement.humidity,
+                    server_began_at.elapsed().as_millis()
                 )
             );
 
@@ -106,7 +110,9 @@ pub async fn keep_serving_tcp_connections(
         Option<scd30_interface::data::Measurement>,
     >,
 ) -> ! {
+    let server_began_at = embassy_time::Instant::now();
+
     loop {
-        serve_one_http_request(stack, &mut control, measurement_cell).await;
+        serve_one_http_request(stack, &mut control, measurement_cell, server_began_at).await;
     }
 }
