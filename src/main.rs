@@ -13,7 +13,7 @@ mod wifi_setup;
 use embassy_executor::Spawner;
 use embassy_net::StackResources;
 use embassy_rp::peripherals::*;
-use embassy_rp::{bind_interrupts, i2c, pio, usb};
+use embassy_rp::{bind_interrupts, i2c, pio, usb, watchdog};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use panic_probe as _;
 use static_cell::StaticCell;
@@ -98,4 +98,16 @@ async fn main(spawner: Spawner) {
             measurement_cell,
         ))
         .unwrap();
+
+    // Watchdog feed loop
+    let mut watchdog = watchdog::Watchdog::new(p.WATCHDOG);
+    watchdog.start(embassy_time::Duration::from_millis(2000));
+    let timestamp_at_main_loop_begin = embassy_time::Instant::now();
+    loop {
+        // Stop feeding the watchdog if the uptime is more than 1 hour
+        if timestamp_at_main_loop_begin.elapsed() < embassy_time::Duration::from_secs(3600) {
+            watchdog.feed();
+        }
+        embassy_time::Timer::after_millis(1000).await;
+    }
 }
