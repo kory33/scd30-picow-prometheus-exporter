@@ -26,10 +26,10 @@ fn write_to_initial_segment_and_reborrow<'a>(
     &mut buf[..position as usize]
 }
 
-async fn with_led_on<Fut: Future>(control: &mut cyw43::Control<'_>, f: impl FnOnce() -> Fut) {
-    control.gpio_set(0, false).await;
-    f().await;
+async fn with_led_on(control: &mut cyw43::Control<'_>, f: impl Future) {
     control.gpio_set(0, true).await;
+    f.await;
+    control.gpio_set(0, false).await;
 }
 
 async fn serve_one_http_request(
@@ -45,57 +45,56 @@ async fn serve_one_http_request(
     let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
     socket.set_timeout(Some(Duration::from_secs(3)));
 
-    with_led_on(control, || async {
-        log::info!("Listening on TCP:1234...");
-        if let Err(e) = socket.accept(1234).await {
-            log::warn!("accept error: {:?}", e);
-            return;
-        }
-        log::info!("Received connection from {:?}", socket.remote_endpoint());
-    })
-    .await;
-
-    let measurement = {
-        let guard = measurement_cell.lock().await;
-        guard.as_ref().map(crate::util::clone_measurement)
-    };
-
-    let response_code;
-    if let Some(measurement) = measurement {
-        let mut body_buf = [0_u8; 256];
-        let response_body = write_to_initial_segment_and_reborrow(&mut body_buf,
-            format_args!(
-                "co2_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\n",
-                measurement.co2_concentration, measurement.temperature, measurement.humidity
-            )
-        );
-
-        let mut header_buf = [0_u8; 64];
-        let response_header = write_to_initial_segment_and_reborrow(
-            &mut header_buf,
-            format_args!(
-                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n",
-                response_body.len()
-            ),
-        );
-
-        write_to_socket_or_log_error(&mut socket, response_header).await;
-        write_to_socket_or_log_error(&mut socket, response_body).await;
-        response_code = 200;
-    } else {
-        write_to_socket_or_log_error(&mut socket, b"HTTP/1.1 503 Service Unavailable\r\n\r\n")
-            .await;
-        response_code = 503;
+    if let Err(e) = socket.accept(1234).await {
+        log::warn!("accept error: {:?}", e);
+        return;
     }
 
-    if let Err(e) = socket.flush().await {
-        log::warn!(
-            "exporter server: flush error on {:?}: {:?}",
-            response_code,
-            e
-        );
-    };
-    socket.close();
+    log::info!("Received connection from {:?}", socket.remote_endpoint());
+
+    with_led_on(control,  async {
+        let measurement = {
+            let guard = measurement_cell.lock().await;
+            guard.as_ref().map(crate::util::clone_measurement)
+        };
+
+        let response_code;
+        if let Some(measurement) = measurement {
+            let mut body_buf = [0_u8; 256];
+            let response_body = write_to_initial_segment_and_reborrow(&mut body_buf,
+                format_args!(
+                    "co2_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\n",
+                    measurement.co2_concentration, measurement.temperature, measurement.humidity
+                )
+            );
+
+            let mut header_buf = [0_u8; 64];
+            let response_header = write_to_initial_segment_and_reborrow(
+                &mut header_buf,
+                format_args!(
+                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n",
+                    response_body.len()
+                ),
+            );
+
+            write_to_socket_or_log_error(&mut socket, response_header).await;
+            write_to_socket_or_log_error(&mut socket, response_body).await;
+            response_code = 200;
+        } else {
+            write_to_socket_or_log_error(&mut socket, b"HTTP/1.1 503 Service Unavailable\r\n\r\n")
+                .await;
+            response_code = 503;
+        }
+
+        if let Err(e) = socket.flush().await {
+            log::warn!(
+                "exporter server: flush error on {:?}: {:?}",
+                response_code,
+                e
+            );
+        };
+        socket.close();
+    }).await;
 }
 
 #[embassy_executor::task]
