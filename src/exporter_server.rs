@@ -65,7 +65,7 @@ async fn serve_one_http_request(
         let mut body_buf = [0_u8; 256];
         let response_body = write_to_initial_segment_and_reborrow(&mut body_buf,
             format_args!(
-                "cos_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\n",
+                "co2_concentration_ppm {:.2}\r\ntemperature_deg_celsius {:.2}\r\nrelative_humidity_percent {:.2}\r\n",
                 measurement.co2_concentration, measurement.temperature, measurement.humidity
             )
         );
