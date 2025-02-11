@@ -4,7 +4,8 @@ use embassy_rp::interrupt::typelevel::Binding;
 use embassy_rp::{peripherals::*, Peripheral};
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, RawMutex};
 use embassy_time::{Duration, Timer};
-use {defmt_rtt as _, panic_probe as _};
+
+use panic_probe as _;
 
 pub fn setup<'d, T: Instance>(
     i2c_peripheral: impl Peripheral<P = T> + 'd,

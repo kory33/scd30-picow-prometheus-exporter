@@ -7,7 +7,8 @@ use embassy_rp::interrupt;
 use embassy_rp::peripherals::*;
 use embassy_rp::{gpio, pio};
 use static_cell::StaticCell;
-use {defmt_rtt as _, panic_probe as _};
+
+use panic_probe as _;
 
 use rand::RngCore as _;
 

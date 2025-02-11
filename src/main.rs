@@ -15,8 +15,8 @@ use embassy_net::StackResources;
 use embassy_rp::peripherals::*;
 use embassy_rp::{bind_interrupts, i2c, pio, usb};
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use panic_probe as _;
 use static_cell::StaticCell;
-use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct Irqs {
     // for debugging

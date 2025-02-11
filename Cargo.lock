@@ -108,20 +108,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f68f53c83ab957f72c32642f3868eec03eb974d1fb82e453128456482613d36"
 
 [[package]]
-name = "bt-hci"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d69c6b9d78fe4db539449fc8782dd2554fd4baee27f6e6dbf2e4757fcbc36139"
-dependencies = [
- "defmt",
- "embassy-sync",
- "embedded-io",
- "embedded-io-async",
- "futures-intrusive",
- "heapless",
-]
-
-[[package]]
 name = "bytemuck"
 version = "1.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -217,18 +203,16 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c998ad980bbdc3947db4951bc763d14738ab873e20b5e2d87bb683011d7f9e8"
 dependencies = [
- "bt-hci",
  "cortex-m",
  "cortex-m-rt",
- "defmt",
  "embassy-futures",
  "embassy-net-driver-channel",
  "embassy-sync",
  "embassy-time",
  "embedded-hal 1.0.0",
- "embedded-io-async",
  "futures",
  "heapless",
+ "log",
  "num_enum",
 ]
 
@@ -239,7 +223,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09b87692b83201141715b0222ecffebd99a5fb4c663ebb3d21298c11462fabb2"
 dependencies = [
  "cyw43",
- "defmt",
  "embassy-rp",
  "fixed",
  "pio",
@@ -408,9 +391,9 @@ checksum = "90327bcc66333a507f89ecc4e2d911b265c45f5c9bc241f98eee076752d35ac6"
 dependencies = [
  "cortex-m",
  "critical-section",
- "defmt",
  "document-features",
  "embassy-executor-macros",
+ "log",
 ]
 
 [[package]]
@@ -439,7 +422,6 @@ checksum = "0ef3bac31ec146321248a169e9c7b5799f1e0b3829c7a9b324cb4600a7438f59"
 dependencies = [
  "cortex-m",
  "critical-section",
- "defmt",
  "num-traits",
 ]
 
@@ -488,7 +470,6 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "critical-section",
- "defmt",
  "document-features",
  "embassy-embedded-hal",
  "embassy-futures",
@@ -507,6 +488,7 @@ dependencies = [
  "embedded-storage",
  "embedded-storage-async",
  "fixed",
+ "log",
  "nb 1.1.0",
  "pio",
  "pio-proc",
@@ -539,13 +521,13 @@ checksum = "f820157f198ada183ad62e0a66f554c610cdcd1a9f27d4b316358103ced7a1f8"
 dependencies = [
  "cfg-if",
  "critical-section",
- "defmt",
  "document-features",
  "embassy-time-driver",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0",
  "embedded-hal-async",
  "futures-util",
+ "log",
 ]
 
 [[package]]
@@ -587,9 +569,6 @@ name = "embassy-usb-driver"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fc247028eae04174b6635104a35b1ed336aabef4654f5e87a8f32327d231970"
-dependencies = [
- "defmt",
-]
 
 [[package]]
 name = "embassy-usb-logger"
@@ -643,9 +622,6 @@ name = "embedded-io"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
-dependencies = [
- "defmt",
-]
 
 [[package]]
 name = "embedded-io-async"
@@ -653,7 +629,6 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ff09972d4073aa8c299395be75161d582e7629cd663171d62af73c8d50dba3f"
 dependencies = [
- "defmt",
  "embedded-io",
 ]
 
@@ -767,16 +742,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05f29059c0c2090612e8d742178b0580d2dc940c837851ad723096f87af6663e"
 
 [[package]]
-name = "futures-intrusive"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d930c203dd0b6ff06e0201a4a2fe9149b43c684fd4420555b26d21b1a02956f"
-dependencies = [
- "futures-core",
- "lock_api",
-]
-
-[[package]]
 name = "futures-io"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -870,7 +835,6 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bfb9eb618601c89945a70e254898da93b13be0388091d42117462b265bb3fad"
 dependencies = [
- "defmt",
  "hash32",
  "stable_deref_trait",
 ]
@@ -1377,7 +1341,6 @@ dependencies = [
  "cortex-m-rt",
  "cyw43",
  "cyw43-pio",
- "defmt",
  "defmt-rtt",
  "dotenv-build",
  "embassy-executor",
